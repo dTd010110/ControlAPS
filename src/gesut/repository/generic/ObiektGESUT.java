@@ -7,7 +7,7 @@ import java.util.Date;
 public abstract class ObiektGESUT {
  private String idIIP;
  private Date startObiekt;
- private Date cyklZyciaObiektu; //sprawdzić typDaty
+ private CyklZyciaInfo cyklZyciaObiektu; //sprawdzić typDaty
  private Date koniecObiekt;
  private String zrodlo;
  private String istnienie;
