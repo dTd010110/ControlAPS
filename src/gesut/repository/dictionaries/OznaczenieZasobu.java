@@ -2,17 +2,17 @@ package gesut.repository.dictionaries;
 
 public enum OznaczenieZasobu {
 
-    centralny('C'),
-    wojewodzki('W'),
-    powiatowy('P');
+    centralny("C"),
+    wojewodzki("W"),
+    powiatowy("P");
 
-    Character oznaczenie;
+    String oznaczenie;
 
-    OznaczenieZasobu(Character oznaczenie) {
+    OznaczenieZasobu(String oznaczenie) {
         this.oznaczenie = oznaczenie;
     }
 
-    public Character getOznaczenie() {
+    public String getOznaczenie() {
         return oznaczenie;
     }
 }
