@@ -1,17 +1,22 @@
 package gesut.repository.dao;
 
-import gesut.repository.dictionaries.Obudowa;
-import gesut.repository.dictionaries.RodzSieci;
-import gesut.repository.dictionaries.RodzSlup;
-import gesut.repository.generic.GM_Curve;
-import gesut.repository.generic.GM_Primitive;
-import gesut.repository.generic.ObiektGESUT;
+import gesut.repository.dictionaries.*;
+import gesut.repository.generic.*;
 
-public class SlupMaszt extends ObiektGESUT {
+import java.time.LocalDate;
+
+public class SlupIMaszt extends ObiektGESUT {
    private GM_Primitive geometria;
    private RodzSieci rodzSieci;
    private RodzSlup rodzSlup;
    private boolean zLatarnia;
+
+    public SlupIMaszt() {
+    }
+
+    public SlupIMaszt(Identyfikator idIIP, LocalDate startObiekt, CyklZyciaInfo cyklZyciaObiektu, LocalDate koniecObiekt, Zrodlo zrodlo, Istnienie istnienie, Eksploatacja eksploatacja, IdMaterialu idMaterialu, LocalDate dataPomiaru, DaneOsoby przedstawiciel, DaneOsoby wladajacy, String idBranzowy, String idUzgodnienia, String dokument, String informacja) {
+        super(idIIP, startObiekt, cyklZyciaObiektu, koniecObiekt, zrodlo, istnienie, eksploatacja, idMaterialu, dataPomiaru, przedstawiciel, wladajacy, idBranzowy, idUzgodnienia, dokument, informacja);
+    }
 
     public GM_Primitive getGeometria() {
         return geometria;

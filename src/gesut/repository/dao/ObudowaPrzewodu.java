@@ -1,11 +1,9 @@
 package gesut.repository.dao;
 
-import gesut.repository.dictionaries.Obudowa;
-import gesut.repository.dictionaries.RodzBud;
-import gesut.repository.dictionaries.RodzSieci;
-import gesut.repository.generic.GM_Curve;
-import gesut.repository.generic.GM_Surface;
-import gesut.repository.generic.ObiektGESUT;
+import gesut.repository.dictionaries.*;
+import gesut.repository.generic.*;
+
+import java.time.LocalDate;
 
 public class ObudowaPrzewodu extends ObiektGESUT {
    private GM_Curve geometria;
@@ -15,6 +13,13 @@ public class ObudowaPrzewodu extends ObiektGESUT {
    private int wymiarPionowy;
    private int wymiarPoziomy;
    private int liczbaRur;
+
+    public ObudowaPrzewodu() {
+    }
+
+    public ObudowaPrzewodu(Identyfikator idIIP, LocalDate startObiekt, CyklZyciaInfo cyklZyciaObiektu, LocalDate koniecObiekt, Zrodlo zrodlo, Istnienie istnienie, Eksploatacja eksploatacja, IdMaterialu idMaterialu, LocalDate dataPomiaru, DaneOsoby przedstawiciel, DaneOsoby wladajacy, String idBranzowy, String idUzgodnienia, String dokument, String informacja) {
+        super(idIIP, startObiekt, cyklZyciaObiektu, koniecObiekt, zrodlo, istnienie, eksploatacja, idMaterialu, dataPomiaru, przedstawiciel, wladajacy, idBranzowy, idUzgodnienia, dokument, informacja);
+    }
 
     public GM_Curve getGeometria() {
         return geometria;

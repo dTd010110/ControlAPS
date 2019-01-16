@@ -3,7 +3,7 @@ package gesut.repository.dictionaries;
 public enum Zrodlo {
     pomiarNaOsnowe("O"),
     pomiarWykrywaczemPrzewodow("A"),
-    digitalizacjaWektoryzacja("D"),
+    digitalizacjaIWektoryzacja("D"),
     fotogrametria("F"),
     pomiarWOparciuOElementyMapy("M"),
     daneBranzowe("B"),

@@ -2,9 +2,9 @@ package gesut.repository.dictionaries;
 
 public enum OznaczenieZasobu {
 
-    centralny("C"),
-    wojewodzki("W"),
-    powiatowy("P");
+    C("centralny"),
+    W("wojewodzki"),
+    P("powiatowy");
 
     String oznaczenie;
 

@@ -1,13 +1,13 @@
 package gesut.repository.dictionaries;
 
-public enum Urzadz {
+public enum RodzajUrzadz {
     dystrybutorPaliw("d"),
     hydrant("h"),
     hydrofornia("hd"),
     kontenerTelekomunikacyjny("kt"),
     kratkaSciekowa("ks"),
     odwodnienieLiniowe("ol"),
-    osatnikKanalizacjiLokalnej("sz"),
+    osadnikKanalizacjiLokalnej("sz"),
     przepompownia("p"),
     slupekTelekomunikacyjny("sl"),
     slupowaStacjaTransformatorowa("ts"),
@@ -34,7 +34,7 @@ public enum Urzadz {
 
     String literal;
 
-    Urzadz(String literal) {
+    RodzajUrzadz(String literal) {
         this.literal = literal;
     }
 

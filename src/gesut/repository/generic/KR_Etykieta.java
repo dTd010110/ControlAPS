@@ -3,9 +3,9 @@ package gesut.repository.generic;
 public class KR_Etykieta {
     private String tekst;
     private KR_KrojPisma czcionka;
-    private GM_Primitive geometriaKarto;
+    private GM_Point geometriaKarto;
     private GM_Curve odnosnik;
-    private float katObrotu;
+    private double katObrotu;
     private int justyfikacja;
     private String kodKarto;
 
@@ -25,11 +25,11 @@ public class KR_Etykieta {
         this.czcionka = czcionka;
     }
 
-    public GM_Primitive getGeometriaKarto() {
+    public GM_Point getGeometriaKarto() {
         return geometriaKarto;
     }
 
-    public void setGeometriaKarto(GM_Primitive geometriaKarto) {
+    public void setGeometriaKarto(GM_Point geometriaKarto) {
         this.geometriaKarto = geometriaKarto;
     }
 
@@ -41,11 +41,11 @@ public class KR_Etykieta {
         this.odnosnik = odnosnik;
     }
 
-    public float getKatObrotu() {
+    public double getKatObrotu() {
         return katObrotu;
     }
 
-    public void setKatObrotu(float katObrotu) {
+    public void setKatObrotu(double katObrotu) {
         this.katObrotu = katObrotu;
     }
 

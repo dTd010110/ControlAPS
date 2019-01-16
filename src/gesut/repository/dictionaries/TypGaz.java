@@ -3,8 +3,8 @@ package gesut.repository.dictionaries;
 public enum TypGaz {
     wysokiegoCisnienia("w"),
     podwyzszonegoSredniegoCisnienia("p"),
-    SredniegoCisnienia("s"),
-    niskiegoCisinienia("n");
+    sredniegoCisnienia("s"),
+    niskiegoCisnienia("n");
 
     String literal;
 

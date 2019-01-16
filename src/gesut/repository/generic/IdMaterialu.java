@@ -68,4 +68,14 @@ public class IdMaterialu {
     public int hashCode() {
         return Objects.hash(pierwszyCzlon, drugiCzlon, trzeciCzlon, czwartyCzlon);
     }
+
+    @Override
+    public String toString() {
+        return "IdMaterialu{" +
+                "pierwszyCzlon=" + pierwszyCzlon +
+                ", drugiCzlon='" + drugiCzlon + '\'' +
+                ", trzeciCzlon=" + trzeciCzlon +
+                ", czwartyCzlon=" + czwartyCzlon +
+                '}';
+    }
 }

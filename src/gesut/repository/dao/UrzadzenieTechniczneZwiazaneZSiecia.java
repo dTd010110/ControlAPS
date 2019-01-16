@@ -1,20 +1,25 @@
 package gesut.repository.dao;
 
-import gesut.repository.dictionaries.KsztaltUrzadz;
-import gesut.repository.dictionaries.Przebieg;
-import gesut.repository.dictionaries.RodzSieci;
-import gesut.repository.dictionaries.Urzadz;
-import gesut.repository.generic.GM_Primitive;
-import gesut.repository.generic.ObiektGESUT;
+import gesut.repository.dictionaries.*;
+import gesut.repository.generic.*;
+
+import java.time.LocalDate;
 
 public class UrzadzenieTechniczneZwiazaneZSiecia extends ObiektGESUT {
     private GM_Primitive geometria;
     private RodzSieci rodzSieci;
-    private Urzadz rodzajUrzadz;
+    private RodzajUrzadz rodzajUrzadz;
     private KsztaltUrzadz ksztaltUrzadz;
     private Przebieg przebieg;
     private boolean zasobnik;
     private int srednica;
+
+    public UrzadzenieTechniczneZwiazaneZSiecia() {
+    }
+
+    public UrzadzenieTechniczneZwiazaneZSiecia(Identyfikator idIIP, LocalDate startObiekt, CyklZyciaInfo cyklZyciaObiektu, LocalDate koniecObiekt, Zrodlo zrodlo, Istnienie istnienie, Eksploatacja eksploatacja, IdMaterialu idMaterialu, LocalDate dataPomiaru, DaneOsoby przedstawiciel, DaneOsoby wladajacy, String idBranzowy, String idUzgodnienia, String dokument, String informacja) {
+        super(idIIP, startObiekt, cyklZyciaObiektu, koniecObiekt, zrodlo, istnienie, eksploatacja, idMaterialu, dataPomiaru, przedstawiciel, wladajacy, idBranzowy, idUzgodnienia, dokument, informacja);
+    }
 
     public GM_Primitive getGeometria() {
         return geometria;
@@ -32,11 +37,11 @@ public class UrzadzenieTechniczneZwiazaneZSiecia extends ObiektGESUT {
         this.rodzSieci = rodzSieci;
     }
 
-    public Urzadz getRodzajUrzadz() {
+    public RodzajUrzadz getRodzajUrzadz() {
         return rodzajUrzadz;
     }
 
-    public void setRodzajUrzadz(Urzadz rodzajUrzadz) {
+    public void setRodzajUrzadz(RodzajUrzadz rodzajUrzadz) {
         this.rodzajUrzadz = rodzajUrzadz;
     }
 

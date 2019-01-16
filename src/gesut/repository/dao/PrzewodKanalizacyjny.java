@@ -1,8 +1,12 @@
 package gesut.repository.dao;
 
-import gesut.repository.dictionaries.TypGaz;
-import gesut.repository.dictionaries.TypKanal;
+import gesut.repository.dictionaries.*;
+import gesut.repository.generic.CyklZyciaInfo;
+import gesut.repository.generic.IdMaterialu;
+import gesut.repository.generic.Identyfikator;
 import gesut.repository.generic.Przewod;
+
+import java.time.LocalDate;
 
 public class PrzewodKanalizacyjny extends Przewod {
     private Integer srednica;
@@ -10,6 +14,13 @@ public class PrzewodKanalizacyjny extends Przewod {
     private int wymiarPionowy;
     private int wymiarPoziomy;
     private boolean tloczny;
+
+    public PrzewodKanalizacyjny() {
+    }
+
+    public PrzewodKanalizacyjny(Identyfikator idIIP, LocalDate startObiekt, CyklZyciaInfo cyklZyciaObiektu, LocalDate koniecObiekt, Zrodlo zrodlo, Istnienie istnienie, Eksploatacja eksploatacja, IdMaterialu idMaterialu, LocalDate dataPomiaru, DaneOsoby przedstawiciel, DaneOsoby wladajacy, String idBranzowy, String idUzgodnienia, String dokument, String informacja) {
+        super(idIIP, startObiekt, cyklZyciaObiektu, koniecObiekt, zrodlo, istnienie, eksploatacja, idMaterialu, dataPomiaru, przedstawiciel, wladajacy, idBranzowy, idUzgodnienia, dokument, informacja);
+    }
 
     public Integer getSrednica() {
         return srednica;
