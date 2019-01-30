@@ -1,6 +1,7 @@
 package gesut.repository.generic;
 
 import com.vividsolutions.jts.geom.*;
+import gesut.gml.GmlGeometryTypes;
 
 import java.util.Objects;
 
@@ -8,7 +9,7 @@ public class GM_Surface {
     private Polygon polygon;
 
     public GM_Surface(GeometryFromGml geometryFromGml) {
-        if(geometryFromGml.getGeometyType().equals("Circle")){
+        if(geometryFromGml.getGeometyType() == GmlGeometryTypes.CIRCLE){
             Point point = new GeometryFactory().createPoint(geometryFromGml.getCoordinateList().getCoordinate(0));
             this.polygon =(Polygon) point.buffer(geometryFromGml.getRadius());
         }else if(geometryFromGml.getCoordinateList().toCoordinateArray().length > 1){

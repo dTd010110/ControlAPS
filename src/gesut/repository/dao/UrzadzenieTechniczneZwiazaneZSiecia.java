@@ -12,7 +12,7 @@ public class UrzadzenieTechniczneZwiazaneZSiecia extends ObiektGESUT {
     private KsztaltUrzadz ksztaltUrzadz;
     private Przebieg przebieg;
     private boolean zasobnik;
-    private int srednica;
+    private int srednica = 0;
 
     public UrzadzenieTechniczneZwiazaneZSiecia() {
     }

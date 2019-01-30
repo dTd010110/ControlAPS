@@ -6,6 +6,8 @@ import gesut.repository.dictionaries.Istnienie;
 import gesut.repository.dictionaries.Zrodlo;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class ObiektGESUT  extends GeometryFromGml {
  private Identyfikator idIIP;
@@ -23,6 +25,7 @@ public abstract class ObiektGESUT  extends GeometryFromGml {
  private String idUzgodnienia;
  private String dokument;
  private String informacja;
+ private List<String> elementyTowarzyszace = new ArrayList<>(4);
 
  public ObiektGESUT() {
  }
@@ -163,5 +166,13 @@ public abstract class ObiektGESUT  extends GeometryFromGml {
 
  public void setDataPomiaru(LocalDate dataPomiaru) {
   this.dataPomiaru = dataPomiaru;
+ }
+
+ public List<String> getElementyTowarzyszace() {
+  return elementyTowarzyszace;
+ }
+
+ public void setElementyTowarzyszace(List<String> elementyTowarzyszace) {
+  this.elementyTowarzyszace = elementyTowarzyszace;
  }
 }

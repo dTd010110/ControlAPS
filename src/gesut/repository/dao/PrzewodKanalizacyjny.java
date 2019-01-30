@@ -7,9 +7,10 @@ import gesut.repository.generic.Identyfikator;
 import gesut.repository.generic.Przewod;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class PrzewodKanalizacyjny extends Przewod {
-    private Integer srednica;
+    private Integer srednica = 0;
     private TypKanal typKanal;
     private int wymiarPionowy;
     private int wymiarPoziomy;
@@ -60,5 +61,23 @@ public class PrzewodKanalizacyjny extends Przewod {
 
     public void setTloczny(boolean tloczny) {
         this.tloczny = tloczny;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PrzewodKanalizacyjny)) return false;
+        if (!super.equals(o)) return false;
+        PrzewodKanalizacyjny that = (PrzewodKanalizacyjny) o;
+        return wymiarPionowy == that.wymiarPionowy &&
+                wymiarPoziomy == that.wymiarPoziomy &&
+                tloczny == that.tloczny &&
+                srednica.equals(that.srednica) &&
+                typKanal == that.typKanal;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), srednica, typKanal, wymiarPionowy, wymiarPoziomy, tloczny);
     }
 }

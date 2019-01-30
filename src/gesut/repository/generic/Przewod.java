@@ -4,6 +4,7 @@ import gesut.repository.dao.DaneOsoby;
 import gesut.repository.dictionaries.*;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class Przewod extends ObiektGESUT{
     private GM_Curve geometria;
@@ -63,5 +64,21 @@ public class Przewod extends ObiektGESUT{
 
     public void setRodzPrzewodu(RodzPrzewodu rodzPrzewodu) {
         this.rodzPrzewodu = rodzPrzewodu;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Przewod przewod = (Przewod) o;
+        return funkcja == przewod.funkcja &&
+                przebieg == przewod.przebieg &&
+                rodzPrzewodu == przewod.rodzPrzewodu;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), funkcja, przebieg, rodzPrzewodu);
     }
 }

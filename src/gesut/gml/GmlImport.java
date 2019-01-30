@@ -6,8 +6,6 @@ import gesut.repository.dictionaries.*;
 import gesut.repository.generic.*;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -19,27 +17,29 @@ import java.util.stream.Stream;
 
 public class GmlImport {
 
-    public List<BudowlaPodziemna> budowlaPodziemnaList = new ArrayList<>();
-    public List<KorytarzPrzesylowy> korytarzPrzesylowyList = new ArrayList<>();
-    public List<ObiektKarto> obiektKartoList = new ArrayList<>();
-    public List<ObudowaPrzewodu> obudowaPrzewoduList = new ArrayList<>();
-    public List<PrzewodBenzynowy> przewodBenzynowyList = new ArrayList<>();
-    public List<PrzewodCieplowniczy> przewodCieplowniczyList = new ArrayList<>();
-    public List<PrzewodElektroenergetyczny> przewodElektroenergetycznyList = new ArrayList<>();
-    public List<PrzewodGazowy> przewodGazowyList = new ArrayList<>();
-    public List<PrzewodInny> przewodInnyList = new ArrayList<>();
-    public List<PrzewodKanalizacyjny> przewodKanalizacyjnyList = new ArrayList<>();
-    public List<PrzewodNaftowy> przewodNaftowyList = new ArrayList<>();
-    public List<PrzewodNiezidentyfikowany> przewodNiezidentyfikowanyList = new ArrayList<>();
-    public List<PrzewodTelekomunikacyjny> przewodTelekomunikacyjnyList = new ArrayList<>();
-    public List<PrzewodWodociagowy> przewodWodociagowyList = new ArrayList<>();
-    public List<PunktOOkreslonejWysokosci> punktOOkreslonejWysokosciList = new ArrayList<>();
-    public List<SlupIMaszt> slupIMasztList = new ArrayList<>();
-    public List<UrzadzenieTechniczneZwiazaneZSiecia> urzadzenieTechniczneZwiazaneZSieciaList = new ArrayList<>();
+    //TODO po impporcie trzeba dodać idIIP do obiektow (przewodow, urzadzen)
 
-    public HashMap<Identyfikator, Identyfikator> identyfikatorHashSet = new HashMap<>();
+    private List<BudowlaPodziemna> budowlaPodziemnaList = new ArrayList<>();
+    private List<KorytarzPrzesylowy> korytarzPrzesylowyList = new ArrayList<>();
+    private List<ObiektKarto> obiektKartoList = new ArrayList<>();
+    private List<ObudowaPrzewodu> obudowaPrzewoduList = new ArrayList<>();
+    private List<PrzewodBenzynowy> przewodBenzynowyList = new ArrayList<>();
+    private List<PrzewodCieplowniczy> przewodCieplowniczyList = new ArrayList<>();
+    private List<PrzewodElektroenergetyczny> przewodElektroenergetycznyList = new ArrayList<>();
+    private List<PrzewodGazowy> przewodGazowyList = new ArrayList<>();
+    private List<PrzewodInny> przewodInnyList = new ArrayList<>();
+    private List<PrzewodKanalizacyjny> przewodKanalizacyjnyList = new ArrayList<>();
+    private List<PrzewodNaftowy> przewodNaftowyList = new ArrayList<>();
+    private List<PrzewodNiezidentyfikowany> przewodNiezidentyfikowanyList = new ArrayList<>();
+    private List<PrzewodTelekomunikacyjny> przewodTelekomunikacyjnyList = new ArrayList<>();
+    private List<PrzewodWodociagowy> przewodWodociagowyList = new ArrayList<>();
+    private List<PunktOOkreslonejWysokosci> punktOOkreslonejWysokosciList = new ArrayList<>();
+    private List<SlupIMaszt> slupIMasztList = new ArrayList<>();
+    private List<UrzadzenieTechniczneZwiazaneZSiecia> urzadzenieTechniczneZwiazaneZSieciaList = new ArrayList<>();
 
-    private StringBuilder stringBuilder = null;
+    private HashMap<Identyfikator, Identyfikator> identyfikatorHashSet = new HashMap<>();
+    private HashMap<Coordinate, Integer> mapOfLinesCoordinates = new HashMap<>();
+
     private boolean isObjectStart = false;
     private BudowlaPodziemna budowlaPodziemna;
     private KorytarzPrzesylowy korytarzPrzesylowy;
@@ -63,7 +63,9 @@ public class GmlImport {
 
     private GestuTransferedObject transferedObject;
 
+
     private Identyfikator idIIP;
+    private Identyfikator idIIPTowarzyszacy;
     private CyklZyciaInfo cyklZyciaInfo;
     private IdMaterialu idMaterialu;
     private DaneOsoby przedstawiciel;
@@ -89,37 +91,9 @@ public class GmlImport {
     private double rzednaGory;
     private double rzednaDolu;
     private boolean isEtykieta = false;
+    private boolean isIdentyfikatorTowarzyszacy = false;
 
-
-//    public void importGmlFile(File file) throws IOException {
-//        RandomAccessFile aFile = new RandomAccessFile
-//                (file, "r");
-//        FileChannel inChannel = aFile.getChannel();
-//        ByteBuffer buffer = ByteBuffer.allocate(2048);
-//        while(inChannel.read(buffer) > 0)
-//        {
-//            buffer.flip();
-//            for (int i = 0; i < buffer.limit(); i++)
-//            {
-////                System.out.print((char) buffer.get());
-//            }
-//            buffer.clear(); // do something with the data and clear/compact it.
-//        }
-//        inChannel.close();
-//        aFile.close();
-//    }
-
-//    public void importGmlFile(File file, int version) throws IOException {
-//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-//            String line;
-//            while ((line = br.readLine()) != null) {
-////                System.out.println(line);
-//                // process the line.
-//            }
-//        }
-//    }
-
-    public void importGmlFile(File file, int version, int x) throws IOException {
+    public void importGmlFile(File file) throws IOException {
         try (Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()))) {
 //            stream.forEach(System.out::println);
             stream.forEach(this::separateGmlToObjects);
@@ -255,6 +229,12 @@ public class GmlImport {
                 transferedObject.setWladajacy(wladajacy);
             }
 
+            //Identyfikator Towarzyszacy
+            if(gmlLine.contains("xlink:href=")) {
+                isIdentyfikatorTowarzyszacy = true;
+                transferedObject.getElementyTowarzyszace().add(getIdentyfikatorTowarzyszacy(gmlLine));
+            }
+
             if (transferedObject.getTransferedObjectName() != GmlObjectTypes.BRAKOBIEKTU && !gmlLine.contains(" xsi:nil=\"true\" nilReason=\"inapplicable\"") && !gmlLine.contains("xsi:nil=\"true\" nilReason=\"missing\"")) {
 
                 if (gmlLine.startsWith("<ges:zrodlo>")) {
@@ -274,7 +254,7 @@ public class GmlImport {
                     rzednaGory = stringToDouble(unmarshaller(gmlLine));
                 }
                 if (gmlLine.startsWith("<ges:rzednaDolu>")) {
-                    rzednaGory = stringToDouble(unmarshaller(gmlLine));
+                    rzednaDolu = stringToDouble(unmarshaller(gmlLine));
                 }
             }
             //GEOMETRIA
@@ -350,6 +330,11 @@ public class GmlImport {
         }
        }
 
+    private String getIdentyfikatorTowarzyszacy(String gmlLine) {
+        int indexOf = gmlLine.indexOf("GESUT:");
+        return gmlLine.substring(indexOf+6,gmlLine.length()-3);
+    }
+
     private void fillObiektKarto(String gmlLine) {
         if(gmlLine.startsWith("<bt:KR_ObiektKarto")){
            obiektKarto = new ObiektKarto();
@@ -406,7 +391,7 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:rodzSieci>")){
+        if(gmlLine.startsWith("<ges:rodzajSieci>")){
             urzadzenieTechniczneZwiazaneZSiecia.setRodzSieci(RodzSieci.valueOf(unmarshaller(gmlLine)));
         }
         if(gmlLine.startsWith("<ges:rodzajUrzadz>")){
@@ -427,6 +412,8 @@ public class GmlImport {
             urzadzenieTechniczneZwiazaneZSiecia.setZasobnik(stringToBoolean(unmarshaller(gmlLine)));
         }
         if(gmlLine.equals("</ges:GES_UrzadzenieTechniczneZwiazaneZSiecia>")) {
+            setElementyTowarzyszace(urzadzenieTechniczneZwiazaneZSiecia);
+            setGeometryFromGmlToObcject(urzadzenieTechniczneZwiazaneZSiecia);
             urzadzenieTechniczneZwiazaneZSiecia.setGeometria(new GM_Primitive(geometryFromGmlClass));
             urzadzenieTechniczneZwiazaneZSieciaList.add(urzadzenieTechniczneZwiazaneZSiecia);
             spatialDataToSet = false;
@@ -441,16 +428,18 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:rodzSieci>")){
+        if(gmlLine.startsWith("<ges:rodzajSieci>")){
             slupIMaszt.setRodzSieci(RodzSieci.valueOf(unmarshaller(gmlLine)));
         }
-        if(gmlLine.startsWith("<ges:rodzSlup>")){
+        if(gmlLine.startsWith("<ges:rodzajSlup>")){
             slupIMaszt.setRodzSlup(RodzSlup.valueOf(unmarshaller(gmlLine)));
         }
         if(gmlLine.startsWith("<ges:zLatarnia>")){
             slupIMaszt.setzLatarnia(stringToBoolean(unmarshaller(gmlLine)));
         }
         if(gmlLine.equals("</ges:GES_SlupIMaszt>")) {
+            setGeometryFromGmlToObcject(slupIMaszt);
+            setElementyTowarzyszace(slupIMaszt);
             slupIMaszt.setGeometria(new GM_Primitive(geometryFromGmlClass));
             slupIMasztList.add(slupIMaszt);
             spatialDataToSet = false;
@@ -468,6 +457,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PunktOOkreslonejWysokosci>")) {
             punktOOkreslonejWysokosci.setRzednaDolu(rzednaDolu);
             punktOOkreslonejWysokosci.setRzednaGory(rzednaGory);
+            setGeometryFromGmlToObcject(punktOOkreslonejWysokosci);
 
             punktOOkreslonejWysokosci.setGeometria(new GM_Point(geometryFromGmlClass));
             punktOOkreslonejWysokosciList.add(punktOOkreslonejWysokosci);
@@ -484,15 +474,8 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodWodociagowy.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodWodociagowy.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodWodociagowy.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+        setElementyPrzewodu(przewodWodociagowy, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodWodociagowy.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }else if(gmlLine.equals("<ges:srednica xsi:nil=\"true\" nilReason=\"template\"/>")){
@@ -504,7 +487,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodWodociagowy>")) {
             przewodWodociagowy.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodWodociagowyList.add(przewodWodociagowy);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodWodociagowy);
         }
     }
 
@@ -515,15 +498,9 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodTelekomunikacyjny.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodTelekomunikacyjny.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodTelekomunikacyjny.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodTelekomunikacyjny, gmlLine);
+
         if(gmlLine.startsWith("<ges:wiazka>")){
             przewodTelekomunikacyjny.setWiazka(stringToBoolean(unmarshaller(gmlLine)));
         }
@@ -534,7 +511,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodTelekomunikacyjny>")) {
             przewodTelekomunikacyjny.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodTelekomunikacyjnyList.add(przewodTelekomunikacyjny);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodTelekomunikacyjny);
         }
     }
 
@@ -545,15 +522,8 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodNiezidentyfikowany.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodNiezidentyfikowany.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodNiezidentyfikowany.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+        setElementyPrzewodu(przewodNiezidentyfikowany, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodNiezidentyfikowany.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
@@ -561,7 +531,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodNiezidentyfikowany>")) {
             przewodNiezidentyfikowany.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodNiezidentyfikowanyList.add(przewodNiezidentyfikowany);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodNiezidentyfikowany);
         }
     }
 
@@ -572,15 +542,9 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodNaftowy.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodNaftowy.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodNaftowy.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodNaftowy, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodNaftowy.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
@@ -588,7 +552,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodNaftowy>")) {
             przewodNaftowy.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodNaftowyList.add(przewodNaftowy);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodNaftowy);
         }
     }
 
@@ -600,15 +564,8 @@ public class GmlImport {
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
 
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodKanalizacyjny.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodKanalizacyjny.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodKanalizacyjny.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+        setElementyPrzewodu(przewodKanalizacyjny, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodKanalizacyjny.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
@@ -631,7 +588,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodKanalizacyjny>")) {
             przewodKanalizacyjny.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodKanalizacyjnyList.add(przewodKanalizacyjny);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodKanalizacyjny);
         }
     }
 
@@ -642,22 +599,15 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodInny.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodInny.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodInny.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+        setElementyPrzewodu(przewodInny, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodInny.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
         if(gmlLine.equals("</ges:GES_PrzewodInny>")) {
             przewodInny.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodInnyList.add(przewodInny);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodInny);
         }
     }
 
@@ -668,15 +618,9 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodGazowy.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodGazowy.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodGazowy.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodGazowy, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodGazowy.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
@@ -686,7 +630,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodGazowy>")) {
             przewodGazowy.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodGazowyList.add(przewodGazowy);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodGazowy);
         }
     }
 
@@ -697,15 +641,9 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodElektroenergetyczny.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodElektroenergetyczny.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodElektroenergetyczny.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodElektroenergetyczny, gmlLine);
+
         if(gmlLine.startsWith("<ges:typElektr>")){
             przewodElektroenergetyczny.setTypElektr(TypElektr.valueOf(unmarshaller(gmlLine)));
         }
@@ -716,9 +654,11 @@ public class GmlImport {
             przewodElektroenergetyczny.setWiazka(stringToBoolean(unmarshaller(gmlLine)));
         }
         if(gmlLine.equals("</ges:GES_PrzewodElektroenergetyczny>")) {
+            setGeometryFromGmlToObcject(przewodElektroenergetyczny);
+            setElementyTowarzyszace(przewodElektroenergetyczny);
             przewodElektroenergetyczny.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodElektroenergetycznyList.add(przewodElektroenergetyczny);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodElektroenergetyczny);
         }
     }
 
@@ -729,15 +669,9 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodCieplowniczy.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodCieplowniczy.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodCieplowniczy.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodCieplowniczy, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodCieplowniczy.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
@@ -750,7 +684,7 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_PrzewodCieplowniczy>")) {
             przewodCieplowniczy.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodCieplowniczyList.add(przewodCieplowniczy);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodCieplowniczy);
         }
     }
 
@@ -761,22 +695,16 @@ public class GmlImport {
                     transferedObject.getIdMaterialu(), transferedObject.getDataPomiaru(), transferedObject.getPrzedstawiciel(), transferedObject.getWladajacy(),
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
-        if(gmlLine.startsWith("<ges:funkcja>")){
-            przewodBenzynowy.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:przebieg>")){
-            przewodBenzynowy.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
-        }
-        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
-            przewodBenzynowy.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
-        }
+
+        setElementyPrzewodu(przewodBenzynowy, gmlLine);
+
         if(gmlLine.startsWith("<ges:srednica>")) {
             przewodBenzynowy.setSrednica(stringToInt(unmarshaller(gmlLine)));
         }
         if(gmlLine.equals("</ges:GES_PrzewodBenzynowy>")) {
             przewodBenzynowy.setGeometria(new GM_Curve(geometryFromGmlClass));
             przewodBenzynowyList.add(przewodBenzynowy);
-            spatialDataToSet = false;
+            setEndDataOfObject(przewodBenzynowy);//TODO
         }
     }
 
@@ -810,7 +738,36 @@ public class GmlImport {
         if(gmlLine.equals("</ges:GES_ObudowaPrzewodu>")) {
             obudowaPrzewodu.setGeometria(new GM_Curve(geometryFromGmlClass));
             obudowaPrzewoduList.add(obudowaPrzewodu);
+            setEndDataOfObject(obudowaPrzewodu);
+        }
+    }
+
+    private <T extends ObiektGESUT> void setEndDataOfObject(T object) {
+
+            setGeometryFromGmlToObcject(object);
+            setElementyTowarzyszace(object);
             spatialDataToSet = false;
+            addStartEndPointToMap(object);
+    }
+
+    private <T extends GeometryFromGml> void addStartEndPointToMap(T object) {
+//        Coordinate coordinateStart = object.getCoordinateList().getCoordinate(0);
+//        Coordinate coordinateEnd = object.getCoordinateList().getCoordinate(object.getCoordinateList().size()-1);
+        for (int i = 0; i < object.getCoordinateList().size(); i++) {
+            Coordinate coordinate = object.getCoordinateList().getCoordinate(i);
+            addPointToMap(coordinate);
+        }
+//        addPointToMap(coordinateStart);
+//        addPointToMap(coordinateEnd);
+    }
+
+    private void addPointToMap(Coordinate coordinate){
+        if(mapOfLinesCoordinates.containsKey(coordinate)){
+            Integer integer = mapOfLinesCoordinates.get(coordinate);
+            integer++;
+            mapOfLinesCoordinates.put(coordinate, integer);
+        }else {
+            mapOfLinesCoordinates.put(coordinate, 1);
         }
     }
 
@@ -824,11 +781,13 @@ public class GmlImport {
                     transferedObject.getIdBranzowy(), transferedObject.getIdUzgodnienia(), transferedObject.getDokument(), transferedObject.getInformacja());
         }
 
-        if(gmlLine.startsWith("<ges:rodzSieci>")){
+        if(gmlLine.startsWith("<ges:rodzajSieci>")){
 
         }
 
         if(gmlLine.equals("</ges:GES_KorytarzPrzesylowy>")){
+            setGeometryFromGmlToObcject(korytarzPrzesylowy);
+            setElementyTowarzyszace(korytarzPrzesylowy);
             korytarzPrzesylowy.setGeometria(new GM_Surface(geometryFromGmlClass));
             korytarzPrzesylowyList.add(korytarzPrzesylowy);
             spatialDataToSet = false;
@@ -850,6 +809,8 @@ public class GmlImport {
                budowlaPodziemna.setRodzSieci(RodzSieci.valueOf(unmarshaller(gmlLine)));
            }
            if(gmlLine.equals("</ges:GES_BudowlaPodziemna>")){
+               setGeometryFromGmlToObcject(budowlaPodziemna);
+               setElementyTowarzyszace(budowlaPodziemna);
                budowlaPodziemna.setGeometria(new GM_Surface(geometryFromGmlClass));
                budowlaPodziemnaList.add(budowlaPodziemna);
                spatialDataToSet = false;
@@ -860,14 +821,14 @@ public class GmlImport {
            if(gmlLine.startsWith("<gml:pos>")){
                geometryFromGmlClass.getCoordinateList().add(createCoordinate(unmarshaller(gmlLine)));
            }
-           if(geometryFromGmlClass.getGeometyType().equals("Circle") && gmlLine.startsWith("<gml:radius")){
+           if(geometryFromGmlClass.getGeometyType() == GmlGeometryTypes.CIRCLE && gmlLine.startsWith("<gml:radius")){
                geometryFromGmlClass.setRadius(Double.parseDouble(unmarshaller(gmlLine)));
            }
            if(gmlLine.startsWith("</ges:geometria>")){
                transferedObject.setCoordinateList(geometryFromGmlClass.getCoordinateList());
                transferedObject.setGeometyType(geometryFromGmlClass.getGeometyType());
 
-               if(geometryFromGmlClass.getGeometyType().equals("Circle")) {
+               if(geometryFromGmlClass.getGeometyType() == GmlGeometryTypes.CIRCLE) {
                    transferedObject.setRadius(geometryFromGmlClass.getRadius());
                }
                geometryToSet = false;
@@ -877,22 +838,22 @@ public class GmlImport {
 
      private void setGeomType(String gmlLine){
          if(gmlLine.startsWith("<gml:Point")){
-             geometryFromGmlClass.setGeometyType("Point");
+             geometryFromGmlClass.setGeometyType(GmlGeometryTypes.POINT);
              geometryTypeToSet = false;
              geometryToSet = true;
          }
          if(gmlLine.startsWith("<gml:LineStringSegment>")){
-             geometryFromGmlClass.setGeometyType("LineString");
+             geometryFromGmlClass.setGeometyType(GmlGeometryTypes.LINESTRING);
              geometryTypeToSet = false;
              geometryToSet = true;
          }
          if(gmlLine.startsWith("<gml:CircleByCenterPoint")){
-             geometryFromGmlClass.setGeometyType("Circle");
+             geometryFromGmlClass.setGeometyType(GmlGeometryTypes.CIRCLE);
              geometryTypeToSet = false;
              geometryToSet = true;
          }
          if(gmlLine.startsWith("<gml:LinearRing>")){
-             geometryFromGmlClass.setGeometyType("LinearRing");
+             geometryFromGmlClass.setGeometyType(GmlGeometryTypes.LINEARRING);
              geometryTypeToSet = false;
              geometryToSet = true;
          }
@@ -1004,10 +965,187 @@ public class GmlImport {
         return Double.parseDouble(stringToConvert);
     }
 
-       private Coordinate createCoordinate(String unmarschallerGmlLine) {
+    private Coordinate createCoordinate(String unmarschallerGmlLine) {
         String[] splited = unmarschallerGmlLine.split("\\s");
            double x = Double.parseDouble(splited[0]);
            double y = Double.parseDouble(splited[1]);
            return  new Coordinate(x, y);
        }
+
+    private < T extends GeometryFromGml> void setGeometryFromGmlToObcject( T obcject){
+           obcject.setGeometyType(transferedObject.getGeometyType());
+           obcject.setRadius(transferedObject.getRadius());
+           obcject.setCoordinateList(transferedObject.getCoordinateList());
+       }
+
+    private <T extends ObiektGESUT> void setElementyTowarzyszace(T object) {
+        if(isIdentyfikatorTowarzyszacy){
+            isIdentyfikatorTowarzyszacy = false;
+            object.setElementyTowarzyszace(transferedObject.getElementyTowarzyszace());
+        }
+    }
+
+    private <T extends Przewod> void setElementyPrzewodu(T object, String gmlLine) {
+        if(gmlLine.startsWith("<ges:funkcja>")){
+            object.setFunkcja(Funkcja.valueOf(unmarshaller(gmlLine)));
+        }
+        if(gmlLine.startsWith("<ges:przebieg>")){
+            object.setPrzebieg(Przebieg.valueOf(unmarshaller(gmlLine)));
+        }
+        if(gmlLine.startsWith("<ges:rodzajPrzewodu>")){
+            object.setRodzPrzewodu(RodzPrzewodu.valueOf(unmarshaller(gmlLine)));
+        }
+    }
+
+    public List<BudowlaPodziemna> getBudowlaPodziemnaList() {
+        return budowlaPodziemnaList;
+    }
+
+    public void setBudowlaPodziemnaList(List<BudowlaPodziemna> budowlaPodziemnaList) {
+        this.budowlaPodziemnaList = budowlaPodziemnaList;
+    }
+
+    public List<KorytarzPrzesylowy> getKorytarzPrzesylowyList() {
+        return korytarzPrzesylowyList;
+    }
+
+    public void setKorytarzPrzesylowyList(List<KorytarzPrzesylowy> korytarzPrzesylowyList) {
+        this.korytarzPrzesylowyList = korytarzPrzesylowyList;
+    }
+
+    public List<ObiektKarto> getObiektKartoList() {
+        return obiektKartoList;
+    }
+
+    public void setObiektKartoList(List<ObiektKarto> obiektKartoList) {
+        this.obiektKartoList = obiektKartoList;
+    }
+
+    public List<ObudowaPrzewodu> getObudowaPrzewoduList() {
+        return obudowaPrzewoduList;
+    }
+
+    public void setObudowaPrzewoduList(List<ObudowaPrzewodu> obudowaPrzewoduList) {
+        this.obudowaPrzewoduList = obudowaPrzewoduList;
+    }
+
+    public List<PrzewodBenzynowy> getPrzewodBenzynowyList() {
+        return przewodBenzynowyList;
+    }
+
+    public void setPrzewodBenzynowyList(List<PrzewodBenzynowy> przewodBenzynowyList) {
+        this.przewodBenzynowyList = przewodBenzynowyList;
+    }
+
+    public List<PrzewodCieplowniczy> getPrzewodCieplowniczyList() {
+        return przewodCieplowniczyList;
+    }
+
+    public void setPrzewodCieplowniczyList(List<PrzewodCieplowniczy> przewodCieplowniczyList) {
+        this.przewodCieplowniczyList = przewodCieplowniczyList;
+    }
+
+    public List<PrzewodElektroenergetyczny> getPrzewodElektroenergetycznyList() {
+        return przewodElektroenergetycznyList;
+    }
+
+    public void setPrzewodElektroenergetycznyList(List<PrzewodElektroenergetyczny> przewodElektroenergetycznyList) {
+        this.przewodElektroenergetycznyList = przewodElektroenergetycznyList;
+    }
+
+    public List<PrzewodGazowy> getPrzewodGazowyList() {
+        return przewodGazowyList;
+    }
+
+    public void setPrzewodGazowyList(List<PrzewodGazowy> przewodGazowyList) {
+        this.przewodGazowyList = przewodGazowyList;
+    }
+
+    public List<PrzewodInny> getPrzewodInnyList() {
+        return przewodInnyList;
+    }
+
+    public void setPrzewodInnyList(List<PrzewodInny> przewodInnyList) {
+        this.przewodInnyList = przewodInnyList;
+    }
+
+    public List<PrzewodKanalizacyjny> getPrzewodKanalizacyjnyList() {
+        return przewodKanalizacyjnyList;
+    }
+
+    public void setPrzewodKanalizacyjnyList(List<PrzewodKanalizacyjny> przewodKanalizacyjnyList) {
+        this.przewodKanalizacyjnyList = przewodKanalizacyjnyList;
+    }
+
+    public List<PrzewodNaftowy> getPrzewodNaftowyList() {
+        return przewodNaftowyList;
+    }
+
+    public void setPrzewodNaftowyList(List<PrzewodNaftowy> przewodNaftowyList) {
+        this.przewodNaftowyList = przewodNaftowyList;
+    }
+
+    public List<PrzewodNiezidentyfikowany> getPrzewodNiezidentyfikowanyList() {
+        return przewodNiezidentyfikowanyList;
+    }
+
+    public void setPrzewodNiezidentyfikowanyList(List<PrzewodNiezidentyfikowany> przewodNiezidentyfikowanyList) {
+        this.przewodNiezidentyfikowanyList = przewodNiezidentyfikowanyList;
+    }
+
+    public List<PrzewodTelekomunikacyjny> getPrzewodTelekomunikacyjnyList() {
+        return przewodTelekomunikacyjnyList;
+    }
+
+    public void setPrzewodTelekomunikacyjnyList(List<PrzewodTelekomunikacyjny> przewodTelekomunikacyjnyList) {
+        this.przewodTelekomunikacyjnyList = przewodTelekomunikacyjnyList;
+    }
+
+    public List<PrzewodWodociagowy> getPrzewodWodociagowyList() {
+        return przewodWodociagowyList;
+    }
+
+    public void setPrzewodWodociagowyList(List<PrzewodWodociagowy> przewodWodociagowyList) {
+        this.przewodWodociagowyList = przewodWodociagowyList;
+    }
+
+    public List<PunktOOkreslonejWysokosci> getPunktOOkreslonejWysokosciList() {
+        return punktOOkreslonejWysokosciList;
+    }
+
+    public void setPunktOOkreslonejWysokosciList(List<PunktOOkreslonejWysokosci> punktOOkreslonejWysokosciList) {
+        this.punktOOkreslonejWysokosciList = punktOOkreslonejWysokosciList;
+    }
+
+    public List<SlupIMaszt> getSlupIMasztList() {
+        return slupIMasztList;
+    }
+
+    public void setSlupIMasztList(List<SlupIMaszt> slupIMasztList) {
+        this.slupIMasztList = slupIMasztList;
+    }
+
+    public List<UrzadzenieTechniczneZwiazaneZSiecia> getUrzadzenieTechniczneZwiazaneZSieciaList() {
+        return urzadzenieTechniczneZwiazaneZSieciaList;
+    }
+
+    public void setUrzadzenieTechniczneZwiazaneZSieciaList(List<UrzadzenieTechniczneZwiazaneZSiecia> urzadzenieTechniczneZwiazaneZSieciaList) {
+        this.urzadzenieTechniczneZwiazaneZSieciaList = urzadzenieTechniczneZwiazaneZSieciaList;
+    }
+
+    public HashMap<Identyfikator, Identyfikator> getIdentyfikatorHashSet() {
+        return identyfikatorHashSet;
+    }
+
+    public void setIdentyfikatorHashSet(HashMap<Identyfikator, Identyfikator> identyfikatorHashSet) {
+        this.identyfikatorHashSet = identyfikatorHashSet;
+    }
+
+    public HashMap<Coordinate, Integer> getMapOfLinesCoordinates() {
+        return mapOfLinesCoordinates;
+    }
+
+    public void setMapOfLinesCoordinates(HashMap<Coordinate, Integer> mapOfLinesCoordinates) {
+        this.mapOfLinesCoordinates = mapOfLinesCoordinates;
+    }
 }

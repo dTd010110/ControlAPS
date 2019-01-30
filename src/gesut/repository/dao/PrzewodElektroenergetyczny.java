@@ -7,6 +7,7 @@ import gesut.repository.generic.Identyfikator;
 import gesut.repository.generic.Przewod;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class PrzewodElektroenergetyczny extends Przewod {
     private boolean wiazka;
@@ -51,5 +52,22 @@ public class PrzewodElektroenergetyczny extends Przewod {
 
     public void setLiczbaPrzewodow(int liczbaPrzewodow) {
         this.liczbaPrzewodow = liczbaPrzewodow;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PrzewodElektroenergetyczny)) return false;
+        if (!super.equals(o)) return false;
+        PrzewodElektroenergetyczny that = (PrzewodElektroenergetyczny) o;
+        return wiazka == that.wiazka &&
+                oswietleniowy == that.oswietleniowy &&
+                liczbaPrzewodow == that.liczbaPrzewodow &&
+                typElektr == that.typElektr;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), wiazka, typElektr, oswietleniowy, liczbaPrzewodow);
     }
 }
